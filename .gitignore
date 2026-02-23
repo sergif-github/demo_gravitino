@@ -1,0 +1,10 @@
+.venv
+trino/plugin
+notebooks/.ipynb_checkpoints
+jupter/mysql-connector-j-9.6.9.jar
+jupter/postgresql-42.7.10.jar
+gravitino
+gravitino-trino-connector-1.1.0
+/jupyter/gravitino-spark-connector-runtime-3.5_2.12-1.1.0.jar
+/jupyter/mysql-connector-j-9.6.0.jar
+/jupyter/postgresql-42.7.10.jar

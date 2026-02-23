@@ -1,0 +1,97 @@
+services:
+  # Servicio de PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: embalses_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # pgAdmin para gestionar PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4:7
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8081:80"
+    depends_on:
+      - postgres
+
+  # Servicio de MySQL para datos raw
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: embalses_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # Adminer para gestionar MySQL (interfaz web)
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: always
+    ports:
+      - "8085:8080"
+    depends_on:
+      - mysql
+            
+  # Spark Notebook con PySpark y soporte para PostgreSQL y MongoDB
+  # Jupyter Notebook con PySpark
+  jupyter-notebook:
+    build: ./jupyter
+    container_name: jupyter-notebook
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+    environment:
+      JUPYTER_TOKEN: "admin"
+
+  # Trino para consultas distribuidas sobre PostgreSQL, MySQL y Gravitino
+  trino:
+    image: trinodb/trino:435
+    container_name: trino
+    ports:
+      - "8083:8080"
+    depends_on:
+      - postgres
+      - mysql
+      - gravitino
+    volumes:
+      - ./trino/etc:/etc/trino
+      - ./trino/plugin:/lib/trino/plugin
+
+  # Gravitino para gestión centralizada de datos
+  gravitino:
+    image: apache/gravitino:latest   
+    container_name: gravitino
+    ports:
+      - "8090:8090"
+    environment:
+      - GRAVITINO_DB_USER=admin
+      - GRAVITINO_DB_PASSWORD=admin
+    depends_on:
+      - postgres
+      - mysql
+      - jupyter-notebook
+    volumes:
+      - ./gravitino:/root/gravitino/data
+
+volumes:
+  mysql_data:
+  postgres_data:

@@ -1,0 +1,4 @@
+requests
+sqlalchemy
+mysql-connector-python
+pyspark
